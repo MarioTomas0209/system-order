@@ -1,3 +1,5 @@
+import type { BreadcrumbItem, NavItem, SharedData } from '@/types';
+
 import { Breadcrumbs } from '@/components/breadcrumbs';
 import { Icon } from '@/components/icon';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -31,9 +33,9 @@ import { useInitials } from '@/hooks/use-initials';
 import { cn } from '@/lib/utils';
 import { dashboard } from '@/routes';
 import branchRoutes from '@/routes/branches';
-import { type BreadcrumbItem, type NavItem, type SharedData } from '@/types';
+import userRoutes from '@/routes/users';
 import { Link, usePage } from '@inertiajs/react';
-import { BookOpen, Building2, Folder, LayoutGrid, Menu, Package, Search } from 'lucide-react';
+import { Building2, LayoutGrid, Menu, Package, Users } from 'lucide-react';
 import AppLogo from './app-logo';
 import AppLogoIcon from './app-logo-icon';
 
@@ -42,16 +44,25 @@ const mainNavItems: NavItem[] = [
         title: 'Inicio',
         href: dashboard(),
         icon: LayoutGrid,
+        superadmin: false,
     },
     {
         title: 'Órdenes',
         href: '/orders',
         icon: Package,
+        superadmin: false,
     },
     {
         title: 'Sucursales',
         href: branchRoutes.index(),
         icon: Building2,
+        superadmin: true,
+    },
+    {
+        title: 'Usuarios',
+        href: userRoutes.index(),
+        icon: Users,
+        superadmin: true,
     },
 ];
 
@@ -131,7 +142,7 @@ export function AppHeader({ breadcrumbs = [] }: AppHeaderProps) {
                                                     key={item.title}
                                                     href={
                                                         typeof item.href ===
-                                                        'string'
+                                                            'string'
                                                             ? item.href
                                                             : item.href.url
                                                     }
@@ -167,37 +178,44 @@ export function AppHeader({ breadcrumbs = [] }: AppHeaderProps) {
                     <div className="ml-6 hidden h-full items-center space-x-6 lg:flex">
                         <NavigationMenu className="flex h-full items-stretch">
                             <NavigationMenuList className="flex h-full items-stretch space-x-2">
-                                {mainNavItems.map((item, index) => (
-                                    <NavigationMenuItem
-                                        key={index}
-                                        className="relative flex h-full items-center"
-                                    >
-                                        <Link
-                                            href={item.href}
-                                            className={cn(
-                                                navigationMenuTriggerStyle(),
-                                                page.url ===
+                                {mainNavItems.map((item, index) => {
+
+                                    if (item.superadmin && !auth.user.is_super_admin) {
+                                        return null;
+                                    }
+
+                                    return (
+                                        <NavigationMenuItem
+                                            key={index}
+                                            className="relative flex h-full items-center"
+                                        >
+                                            <Link
+                                                href={item.href}
+                                                className={cn(
+                                                    navigationMenuTriggerStyle(),
+                                                    page.url ===
                                                     (typeof item.href ===
-                                                    'string'
+                                                        'string'
                                                         ? item.href
                                                         : item.href.url) &&
                                                     activeItemStyles,
-                                                'h-9 cursor-pointer px-3',
+                                                    'h-9 cursor-pointer px-3',
+                                                )}
+                                            >
+                                                {item.icon && (
+                                                    <Icon
+                                                        iconNode={item.icon}
+                                                        className="mr-2 h-4 w-4"
+                                                    />
+                                                )}
+                                                {item.title}
+                                            </Link>
+                                            {page.url === item.href && (
+                                                <div className="absolute bottom-0 left-0 h-0.5 w-full translate-y-px bg-black dark:bg-white"></div>
                                             )}
-                                        >
-                                            {item.icon && (
-                                                <Icon
-                                                    iconNode={item.icon}
-                                                    className="mr-2 h-4 w-4"
-                                                />
-                                            )}
-                                            {item.title}
-                                        </Link>
-                                        {page.url === item.href && (
-                                            <div className="absolute bottom-0 left-0 h-0.5 w-full translate-y-px bg-black dark:bg-white"></div>
-                                        )}
-                                    </NavigationMenuItem>
-                                ))}
+                                        </NavigationMenuItem>
+                                    )
+                                })}
                             </NavigationMenuList>
                         </NavigationMenu>
                     </div>
@@ -222,7 +240,7 @@ export function AppHeader({ breadcrumbs = [] }: AppHeaderProps) {
                                                 <a
                                                     href={
                                                         typeof item.href ===
-                                                        'string'
+                                                            'string'
                                                             ? item.href
                                                             : item.href.url
                                                     }

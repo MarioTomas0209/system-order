@@ -20,6 +20,7 @@ export interface NavItem {
     href: NonNullable<InertiaLinkProps['href']>;
     icon?: LucideIcon | null;
     isActive?: boolean;
+    superadmin: boolean;
 }
 
 export interface SharedData {
@@ -39,6 +40,10 @@ export interface User {
     two_factor_enabled?: boolean;
     created_at: string;
     updated_at: string;
+    is_active: boolean;
+    is_super_admin: boolean;
+    may_be_visible: boolean;
+    uid: string;
     [key: string]: unknown; // This allows for additional properties...
 }
 

@@ -2,16 +2,24 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Branch;
-use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+
+use App\Models\Branch;
 
 class BranchController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
+
+    public function __construct()
+    {
+        if (! Auth::user()->is_super_admin) {
+            abort(403, 'Unauthorized action.');
+        }
+    }
+
+
     public function index(): Response
     {
         $branches = Branch::orderBy('name')->paginate(10);
