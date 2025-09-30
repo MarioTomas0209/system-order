@@ -84,6 +84,10 @@ class User extends Authenticatable
 
     public function delete(): bool
     {
+        if ($this->is_super_admin) {
+            return false;
+        }
+
         if ($this->createdOrders()->exists()) {
             return false;
         }

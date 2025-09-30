@@ -20,6 +20,8 @@ class UserSeeder extends Seeder
                 'may_be_visible' => false,
                 'is_super_admin' => true,
                 'uid' => User::generateUID(),
+                'created_at' => now(),
+                'updated_at' => now(),
             ],
             [
                 'email' => 'admin@admin.com',
@@ -29,6 +31,8 @@ class UserSeeder extends Seeder
                 'may_be_visible' => true,
                 'is_super_admin' => true,
                 'uid' => User::generateUID(),
+                'created_at' => now(),
+                'updated_at' => now(),
             ]
         ]);
     }
