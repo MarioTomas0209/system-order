@@ -9,15 +9,16 @@ import AuthLayout from '@/layouts/auth-layout';
 import { register } from '@/routes';
 import { request } from '@/routes/password';
 import { Form, Head } from '@inertiajs/react';
-import { LoaderCircle, Eye, EyeOff } from 'lucide-react';
+import { LoaderCircle, Eye, EyeOff, AlertCircle } from 'lucide-react';
 import { useState } from 'react';
 
 interface LoginProps {
     status?: string;
+    error?: string;
     canResetPassword: boolean;
 }
 
-export default function Login({ status, canResetPassword }: LoginProps) {
+export default function Login({ status, error, canResetPassword }: LoginProps) {
     const [showPassword, setShowPassword] = useState(false);
     return (
         <AuthLayout
@@ -33,6 +34,22 @@ export default function Login({ status, canResetPassword }: LoginProps) {
             >
                 {({ processing, errors }) => (
                     <>
+                        {error && (
+                            <div className="rounded-lg border border-red-200 bg-red-50 dark:border-red-800 dark:bg-red-950/50 p-4">
+                                <div className="flex items-start gap-3">
+                                    <AlertCircle className="h-5 w-5 text-red-600 dark:text-red-500 mt-0.5 flex-shrink-0" />
+                                    <div className="flex-1">
+                                        <h3 className="text-sm font-semibold text-red-800 dark:text-red-200">
+                                            Error de autenticación
+                                        </h3>
+                                        <p className="mt-1 text-sm text-red-700 dark:text-red-300">
+                                            {error}
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
                         <div className="grid gap-6">
                             <div className="grid gap-2">
                                 <Label htmlFor="email">Dirección de correo electrónico</Label>

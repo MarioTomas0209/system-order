@@ -1,21 +1,18 @@
+import type { BreadcrumbItem, Order, Branch, SharedData } from '@/types';
+
 import AppLayout from '@/layouts/app-layout';
-import { Head, Link, router } from '@inertiajs/react';
-import { 
-    Search, 
-    Filter, 
-    Plus, 
-    Eye, 
-    Edit, 
-    Trash2, 
-    Calendar, 
-    DollarSign, 
-    Building2, 
+import { Head, Link, router, usePage } from '@inertiajs/react';
+import {
+    Search,
+    Filter,
+    Plus,
+    Eye,
+    Edit,
+    Calendar,
+    Building2,
     Phone,
     Package,
-    Truck,
-    CheckCircle,
     Clock,
-    AlertCircle,
     XCircle,
     User,
     UserCheck,
@@ -27,7 +24,6 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
-import { BreadcrumbItem, Order, Branch } from '@/types';
 
 interface OrdersIndexProps {
     orders: {
@@ -56,6 +52,9 @@ const breadcrumbs: BreadcrumbItem[] = [
 ];
 
 export default function OrdersIndex({ orders, branches, filters, statusOptions }: OrdersIndexProps) {
+
+    const { auth } = usePage<SharedData>().props;
+
     const [searchValue, setSearchValue] = useState(filters.search || '');
     const [showFilters, setShowFilters] = useState(false);
     const [copiedOrderId, setCopiedOrderId] = useState<number | null>(null);
@@ -135,24 +134,24 @@ export default function OrdersIndex({ orders, branches, filters, statusOptions }
 
     const formatDate = (dateString: string) => {
         if (!dateString) return 'Sin fecha';
-        
+
         // Debug temporal - ver qué formato llega
         console.log('Date string received:', dateString, 'Type:', typeof dateString);
-        
+
         try {
             // Si la fecha viene en formato YYYY-MM-DD, agregar tiempo local
             if (dateString.match(/^\d{4}-\d{2}-\d{2}$/)) {
                 const date = new Date(dateString + 'T00:00:00');
                 return date.toLocaleDateString('es-MX');
             }
-            
+
             // Si ya tiene formato ISO completo
             const date = new Date(dateString);
             if (isNaN(date.getTime())) {
                 console.error('Invalid date:', dateString);
                 return 'Fecha inválida';
             }
-            
+
             return date.toLocaleDateString('es-MX');
         } catch (error) {
             console.error('Error formatting date:', dateString, error);
@@ -163,7 +162,7 @@ export default function OrdersIndex({ orders, branches, filters, statusOptions }
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Órdenes" />
-            
+
             <div className="space-y-6">
                 {/* Header */}
                 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
@@ -309,9 +308,12 @@ export default function OrdersIndex({ orders, branches, filters, statusOptions }
                                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                                         Modificado por
                                     </th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                                        Acciones
-                                    </th>
+
+                                    {auth.user.is_super_admin ? (
+                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                                            Acciones
+                                        </th>
+                                    ) : null}
                                 </tr>
                             </thead>
                             <tbody className="bg-white dark:bg-gray-900 divide-y divide-gray-200 dark:divide-gray-700">
@@ -323,7 +325,7 @@ export default function OrdersIndex({ orders, branches, filters, statusOptions }
                                                     <Package className="w-5 h-5 text-white" />
                                                 </div>
                                                 <div className="ml-4">
-                                                    <div 
+                                                    <div
                                                         className="text-sm font-medium text-gray-900 dark:text-white cursor-pointer hover:text-purple-600 dark:hover:text-purple-400 transition-colors flex items-center gap-2"
                                                         onClick={() => handleCopyOrderCode(order.order_code, order.id)}
                                                         title="Hacer clic para copiar"
@@ -376,11 +378,10 @@ export default function OrdersIndex({ orders, branches, filters, statusOptions }
                                             </div>
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap">
-                                            <div className={`text-sm font-medium ${
-                                                (order.remaining_balance || 0) > 0 
-                                                    ? 'text-orange-600 dark:text-orange-400' 
-                                                    : 'text-green-600 dark:text-green-400'
-                                            }`}>
+                                            <div className={`text-sm font-medium ${(order.remaining_balance || 0) > 0
+                                                ? 'text-orange-600 dark:text-orange-400'
+                                                : 'text-green-600 dark:text-green-400'
+                                                }`}>
                                                 {formatCurrency(order.remaining_balance || 0)}
                                             </div>
                                         </td>
@@ -420,26 +421,28 @@ export default function OrdersIndex({ orders, branches, filters, statusOptions }
                                                 </div>
                                             </div>
                                         </td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                            <div className="flex items-center space-x-2">
-                                                <Link
-                                                    href={`/orders/search`}
-                                                    method="post"
-                                                    data={{ order_code: order.order_code }}
-                                                    className="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300"
-                                                    title="Ver detalles"
-                                                >
-                                                    <Eye className="w-4 h-4" />
-                                                </Link>
-                                                <Link
-                                                    href={`/orders/${order.id}/edit`}
-                                                    className="text-green-600 hover:text-green-900 dark:text-green-400 dark:hover:text-green-300"
-                                                    title="Editar orden"
-                                                >
-                                                    <Edit className="w-4 h-4" />
-                                                </Link>
-                                            </div>
-                                        </td>
+                                        {auth.user.is_super_admin ? (
+                                            <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                                <div className="flex items-center space-x-2">
+                                                    <Link
+                                                        href="/orders/search"
+                                                        method="post"
+                                                        data={{ order_code: order.order_code }}
+                                                        className="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300"
+                                                        title="Ver detalles"
+                                                    >
+                                                        <Eye className="w-4 h-4" />
+                                                    </Link>
+                                                    <Link
+                                                        href={`/orders/${order.id}/edit`}
+                                                        className="text-green-600 hover:text-green-900 dark:text-green-400 dark:hover:text-green-300"
+                                                        title="Editar orden"
+                                                    >
+                                                        <Edit className="w-4 h-4" />
+                                                    </Link>
+                                                </div>
+                                            </td>
+                                        ) : null}
                                     </tr>
                                 ))}
                             </tbody>
@@ -458,11 +461,10 @@ export default function OrdersIndex({ orders, branches, filters, statusOptions }
                                         <Link
                                             key={index}
                                             href={link.url || '#'}
-                                            className={`px-3 py-1 text-sm rounded-md ${
-                                                link.active
-                                                    ? 'bg-purple-600 text-white'
-                                                    : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
-                                            } ${!link.url ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+                                            className={`px-3 py-1 text-sm rounded-md ${link.active
+                                                ? 'bg-purple-600 text-white'
+                                                : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
+                                                } ${!link.url ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
                                             dangerouslySetInnerHTML={{ __html: link.label }}
                                         />
                                     ))}

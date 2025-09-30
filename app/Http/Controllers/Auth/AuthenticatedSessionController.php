@@ -22,6 +22,7 @@ class AuthenticatedSessionController extends Controller
         return Inertia::render('auth/login', [
             'canResetPassword' => Route::has('password.request'),
             'status' => $request->session()->get('status'),
+            'error' => $request->session()->get('error'),
         ]);
     }
 
@@ -39,6 +40,12 @@ class AuthenticatedSessionController extends Controller
             ]);
 
             return to_route('two-factor.login');
+        }
+
+        if (! $user->is_active) {
+            return redirect()
+                ->route('login')
+                ->with('error', 'Tu cuenta no está activa. Por favor, contacta al administrador.');
         }
 
         Auth::login($user, $request->boolean('remember'));

@@ -8,6 +8,8 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Fortify\TwoFactorAuthenticatable;
+use Illuminate\Support\Str;
+use phpDocumentor\Reflection\Types\Boolean;
 
 class User extends Authenticatable
 {
@@ -23,6 +25,8 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
+        'is_active',
+        'uid',
     ];
 
     /**
@@ -48,6 +52,15 @@ class User extends Authenticatable
         ];
     }
 
+    public static function generateUID(): string
+    {
+        do {
+            $uid = Str::random(10);
+        } while (self::where('uid', $uid)->exists());
+
+        return $uid;
+    }
+
     // Relaciones con orders
     public function createdOrders(): HasMany
     {
@@ -67,5 +80,14 @@ class User extends Authenticatable
     public function deliveries(): HasMany
     {
         return $this->hasMany(Delivery::class, 'delivered_by');
+    }
+
+    public function delete(): bool
+    {
+        if ($this->createdOrders()->exists()) {
+            return false;
+        }
+
+        return parent::delete();
     }
 }
