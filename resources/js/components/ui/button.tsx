@@ -21,7 +21,11 @@ const buttonVariants = cva(
         link: "text-primary underline-offset-4 hover:underline",
         blueGradient:
           "transform rounded-xl bg-gradient-to-r from-blue-500 to-indigo-600 py-4 font-semibold text-white shadow-lg transition-all hover:scale-105 hover:from-blue-600 hover:to-indigo-700",
-      },
+        greenGradient:
+          "transform rounded-xl bg-gradient-to-r from-green-500 to-emerald-600 py-4 font-semibold text-white shadow-lg transition-all hover:scale-105 hover:from-green-600 hover:to-emerald-700",
+        purpleGradient:
+          "transform rounded-xl bg-gradient-to-r from-purple-500 to-pink-600 py-4 font-semibold text-white shadow-lg transition-all hover:scale-105 hover:from-purple-600 hover:to-pink-700",
+        },
       size: {
         default: "h-9 px-4 py-2 has-[>svg]:px-3",
         sm: "h-8 rounded-md px-3 has-[>svg]:px-2.5",

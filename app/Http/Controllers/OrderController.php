@@ -22,7 +22,7 @@ class OrderController extends Controller
      */
     public function index(Request $request): Response
     {
-        $query = Order::with(['branch', 'payments', 'deliveries', 'creator', 'updater'])
+        $query = Order::with(['branch', 'payments.receiver', 'deliveries.deliverer', 'creator', 'updater'])
             ->orderBy('created_at', 'desc');
 
         // Filtros opcionales
@@ -77,7 +77,7 @@ class OrderController extends Controller
         $orderCode = strtoupper(trim($request->order_code));
         
         // Buscar la orden
-        $order = Order::with(['branch', 'payments', 'deliveries', 'creator', 'updater'])
+        $order = Order::with(['branch', 'payments.receiver', 'deliveries.deliverer', 'creator', 'updater'])
             ->where('order_code', $orderCode)
             ->first();
 
@@ -279,7 +279,7 @@ class OrderController extends Controller
         });
 
         // Recargar la orden con relaciones actualizadas
-        $order->load(['branch', 'payments', 'deliveries']);
+        $order->load(['branch', 'payments.receiver', 'deliveries.deliverer']);
         
         return Inertia::render('orders/FollowUp', [
             'order' => $order,
@@ -328,7 +328,7 @@ class OrderController extends Controller
         });
 
         // Recargar la orden con relaciones actualizadas
-        $order->load(['branch', 'payments', 'deliveries']);
+        $order->load(['branch', 'payments.receiver', 'deliveries.deliverer']);
         
         return Inertia::render('orders/FollowUp', [
             'order' => $order,
@@ -371,7 +371,7 @@ class OrderController extends Controller
         });
 
         // Recargar la orden con relaciones actualizadas
-        $order->load(['branch', 'payments', 'deliveries']);
+        $order->load(['branch', 'payments.receiver', 'deliveries.deliverer']);
         
         return Inertia::render('orders/FollowUp', [
             'order' => $order,
@@ -385,7 +385,7 @@ class OrderController extends Controller
      */
     public function edit(Order $order): Response
     {
-        $order->load(['branch', 'payments', 'deliveries', 'creator', 'updater']);
+        $order->load(['branch', 'payments.receiver', 'deliveries.deliverer', 'creator', 'updater']);
         
         return Inertia::render('orders/Edit', [
             'order' => $order,
