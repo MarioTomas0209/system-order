@@ -226,7 +226,7 @@ export const FollowUp = ({
                                 <div>
                                     <p className="flex items-center text-sm text-gray-500 dark:text-gray-400">
                                         <Calendar className="mr-2 h-4 w-4" />
-                                        Fecha de Entrega
+                                        Fecha de Entregado
                                     </p>
                                     <p className="text-lg font-semibold text-gray-800 dark:text-white">
                                         {order.delivery_date

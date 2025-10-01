@@ -300,7 +300,7 @@ export default function OrdersIndex({ orders, branches, filters, statusOptions }
                                         Fecha Elaboración
                                     </th>
                                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                                        Fecha Entrega
+                                        Fecha Entregado
                                     </th>
                                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                                         Creado por
