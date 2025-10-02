@@ -75,7 +75,7 @@ export default function BranchesIndex({ branches }: BranchesIndexProps) {
             <div className="space-y-6">
                 {/* Header */}
                 <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between p-6 sm:p-0">
-                    <div className="w-full sm:w-auto">
+                    <div className="w-full sm:w-auto mt-5">
                         <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Sucursales</h1>
                         <p className="text-muted-foreground mt-1 text-sm sm:text-base">
                             Gestiona las sucursales de tu empresa
