@@ -17,7 +17,8 @@ import {
     User,
     UserCheck,
     Copy,
-    Check
+    Check,
+    FileChartColumnIncreasing
 } from 'lucide-react';
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
@@ -159,6 +160,17 @@ export default function OrdersIndex({ orders, branches, filters, statusOptions }
         }
     };
 
+    const handleExportPDF = () => {
+        const params = new URLSearchParams();
+        
+        if (filters.status) params.append('status', filters.status);
+        if (filters.branch_id) params.append('branch_id', filters.branch_id.toString());
+        if (searchValue) params.append('search', searchValue);
+        
+        const url = `/reports/orders${params.toString() ? '?' + params.toString() : ''}`;
+        window.open(url, '_blank');
+    };
+
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Órdenes" />
@@ -166,7 +178,7 @@ export default function OrdersIndex({ orders, branches, filters, statusOptions }
             <div className="space-y-6">
                 {/* Header */}
                 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                    <div>
+                    <div className="mt-5">
                         <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Órdenes</h1>
                         <p className="text-gray-600 dark:text-gray-400 mt-1">
                             Gestiona todas las órdenes del sistema
@@ -178,6 +190,16 @@ export default function OrdersIndex({ orders, branches, filters, statusOptions }
                             Nueva Orden
                         </Button>
                     </Link>
+                </div>
+
+                <div className="flex items-end justify-end">
+                    <Button
+                        onClick={handleExportPDF}
+                        className="bg-gradient-to-r from-red-600 to-orange-600 hover:from-red-700 hover:to-orange-700 text-white"
+                    >
+                        <FileChartColumnIncreasing className="w-4 h-4 mr-2" />
+                        Exportar PDF
+                    </Button>
                 </div>
 
                 {/* Filtros y Búsqueda */}
