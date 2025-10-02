@@ -194,13 +194,23 @@ export default function BranchModal({ isOpen, onClose, branch, mode }: BranchMod
                         )}
                     </div>
 
-                    <ModalFooter>
-                        <Button variant="destructive" type="button" onClick={onClose}>
+                    <ModalFooter className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end sm:gap-2">
+                        <Button
+                            variant="destructive"
+                            type="button"
+                            onClick={onClose}
+                            className="w-full sm:w-auto"
+                        >
                             Cancelar
                         </Button>
-                        <Button variant="blueGradient" type="submit" disabled={isSubmitting}>
-                            {isSubmitting 
-                                ? (mode === 'create' ? 'Creando...' : 'Guardando...') 
+                        <Button
+                            variant="blueGradient"
+                            type="submit"
+                            disabled={isSubmitting}
+                            className="w-full sm:w-auto"
+                        >
+                            {isSubmitting
+                                ? (mode === 'create' ? 'Creando...' : 'Guardando...')
                                 : (mode === 'create' ? 'Crear Sucursal' : 'Guardar Cambios')
                             }
                         </Button>

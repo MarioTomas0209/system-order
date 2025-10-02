@@ -17,6 +17,7 @@ import {
     DollarSign,
     FileText,
     MapPin,
+    MessageSquare,
     Package,
     Phone,
     Truck,
@@ -66,6 +67,32 @@ export const FollowUp = ({
     const orderBalance = toNumber(order.balance);
     const totalPaidNum = toNumber(totalPaid);
     const remainingBalanceNum = toNumber(remainingBalance);
+
+    // Función helper para formatear fechas correctamente
+    const formatDate = (dateString: string) => {
+        if (!dateString) return 'Sin fecha';
+
+        try {
+            // Si la fecha viene en formato YYYY-MM-DD, parsear manualmente
+            if (dateString.match(/^\d{4}-\d{2}-\d{2}$/)) {
+                const [year, month, day] = dateString.split('-').map(Number);
+                // Crear fecha en zona horaria local (month es 0-indexed en JavaScript)
+                const date = new Date(year, month - 1, day);
+                return date.toLocaleDateString('es-ES');
+            }
+
+            // Si ya tiene formato ISO completo
+            const date = new Date(dateString);
+            if (isNaN(date.getTime())) {
+                return 'Fecha inválida';
+            }
+
+            return date.toLocaleDateString('es-ES');
+        } catch (error) {
+            console.error('Error formatting date:', dateString, error);
+            return 'Fecha inválida';
+        }
+    };
 
     // Formulario para pagos
     const {
@@ -117,6 +144,13 @@ export const FollowUp = ({
         setPaymentData('amount', remainingBalanceNum);
         setPayDeliverData('amount', remainingBalanceNum);
     }, [remainingBalanceNum, setPaymentData, setPayDeliverData]);
+
+    // Sincronizar fechas cuando se cambie la fecha de pago en "Pagar y Entregar"
+    useEffect(() => {
+        if (actionType === 'pay-deliver') {
+            setPayDeliverData('delivery_date', payDeliverData.payment_date);
+        }
+    }, [payDeliverData.payment_date, actionType, setPayDeliverData]);
 
     const handleAction = (action: 'pay' | 'deliver' | 'pay-deliver') => {
         setActionType(action);
@@ -172,19 +206,19 @@ export const FollowUp = ({
         <>
             <AppLayout breadcrumbs={Breadcrumbs}>
                 <Head title="Seguimiento de Orden" />
-                <div className="min-h-screen p-4 py-8">
+                <div className="min-h-screen p-4 py-4 sm:py-8">
                     <div className="mx-auto max-w-4xl">
                         {/* Header */}
                         <div className="mb-6 text-center">
-                            <div className="mb-4 flex items-center justify-center space-x-4">
-                                <div className="inline-flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-purple-500 to-pink-600 shadow-lg">
-                                    <Package className="h-8 w-8 text-white" />
+                            <div className="mb-4 flex flex-col sm:flex-row sm:items-center sm:justify-center gap-4 sm:space-x-4">
+                                <div className="inline-flex h-12 w-12 sm:h-16 sm:w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-purple-500 to-pink-600 shadow-lg mx-auto sm:mx-0">
+                                    <Package className="h-6 w-6 sm:h-8 sm:w-8 text-white" />
                                 </div>
                                 <div>
-                                    <h1 className="mb-2 text-3xl font-bold text-gray-800 dark:text-white">
+                                    <h1 className="text-2xl sm:text-3xl font-bold text-gray-800 dark:text-white">
                                         Seguimiento de Orden
                                     </h1>
-                                    <p className="text-gray-600 dark:text-gray-400">
+                                    <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400">
                                         {order.order_code}
                                     </p>
                                 </div>
@@ -192,13 +226,13 @@ export const FollowUp = ({
                         </div>
 
                         {/* Información de la Orden */}
-                        <div className="mb-6 rounded-2xl bg-white p-6 shadow-xl dark:bg-gray-800">
-                            <h2 className="mb-4 flex items-center text-xl font-bold text-gray-800 dark:text-white">
-                                <FileText className="mr-2 h-5 w-5" />
+                        <div className="mb-6 rounded-2xl bg-white p-4 sm:p-6 shadow-xl dark:bg-gray-800">
+                            <h2 className="mb-4 flex items-center text-lg sm:text-xl font-bold text-gray-800 dark:text-white">
+                                <FileText className="mr-2 h-4 w-4 sm:h-5 sm:w-5" />
                                 Información de la Orden
                             </h2>
 
-                            <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
+                            <div className="grid grid-cols-1 gap-4 sm:gap-6 sm:grid-cols-2 lg:grid-cols-3">
                                 <div>
                                     <p className="flex items-center text-sm text-gray-500 dark:text-gray-400">
                                         <Building2 className="mr-2 h-4 w-4" />
@@ -215,26 +249,16 @@ export const FollowUp = ({
                                         Fecha de Elaboración
                                     </p>
                                     <p className="text-lg font-semibold text-gray-800 dark:text-white">
-                                        {order.created_date
-                                            ? new Date(
-                                                  order.created_date +
-                                                      'T00:00:00',
-                                              ).toLocaleDateString('es-ES')
-                                            : 'No especificada'}
+                                        {formatDate(order.created_date || '')}
                                     </p>
                                 </div>
                                 <div>
                                     <p className="flex items-center text-sm text-gray-500 dark:text-gray-400">
                                         <Calendar className="mr-2 h-4 w-4" />
-                                        Fecha de Entrega
+                                        Fecha de Entregado
                                     </p>
                                     <p className="text-lg font-semibold text-gray-800 dark:text-white">
-                                        {order.delivery_date
-                                            ? new Date(
-                                                  order.delivery_date +
-                                                      'T00:00:00',
-                                              ).toLocaleDateString('es-ES')
-                                            : 'Sin fecha'}
+                                        {formatDate(order.delivery_date || '')}
                                     </p>
                                 </div>
                                 <div>
@@ -291,6 +315,18 @@ export const FollowUp = ({
                                             order.creator?.email}
                                     </Badge>
                                 </div>
+                                {/* Observaciones */}
+                                {order.notes && (
+                                    <div className="col-span-1 sm:col-span-2 lg:col-span-3 rounded-xl bg-gray-100 p-4 shadow-sm dark:bg-gray-700 dark:shadow-gray-800">
+                                        <h3 className="mb-1 flex items-center text-base sm:text-lg font-semibold text-gray-800 dark:text-white">
+                                            <FileText className="mr-2 h-4 w-4" />
+                                            Observaciones
+                                        </h3>
+                                        <p className="text-sm text-gray-500 uppercase dark:text-gray-400">
+                                            {order.notes}
+                                        </p>
+                                    </div>
+                                )}
                             </div>
 
                             {/* Estado de entrega */}
@@ -305,17 +341,17 @@ export const FollowUp = ({
                         </div>
 
                         {/* Resumen Financiero */}
-                        <div className="mb-6 rounded-2xl bg-white p-6 shadow-xl dark:bg-gray-800">
-                            <h2 className="mb-4 text-xl font-bold text-gray-800 dark:text-white">
+                        <div className="mb-6 rounded-2xl bg-white p-4 sm:p-6 shadow-xl dark:bg-gray-800">
+                            <h2 className="mb-4 text-lg sm:text-xl font-bold text-gray-800 dark:text-white">
                                 Resumen Financiero
                             </h2>
 
                             <div className="space-y-4">
                                 <div className="flex items-center justify-between">
-                                    <span className="text-gray-600 dark:text-gray-400">
+                                    <span className="text-sm sm:text-base text-gray-600 dark:text-gray-400">
                                         Total
                                     </span>
-                                    <span className="text-2xl font-bold text-gray-800 dark:text-white">
+                                    <span className="text-xl sm:text-2xl font-bold text-gray-800 dark:text-white">
                                         ${orderTotal.toFixed(2)}
                                     </span>
                                 </div>
@@ -329,7 +365,7 @@ export const FollowUp = ({
                                     />
                                 </div>
 
-                                <div className="grid grid-cols-3 gap-4 text-center">
+                                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 text-center">
                                     <div className="rounded-xl bg-blue-50 p-3 dark:bg-gray-700">
                                         <p className="text-xs text-gray-600 dark:text-gray-400">
                                             Anticipo
@@ -360,8 +396,8 @@ export const FollowUp = ({
 
                         {/* Captura de Acciones */}
                         {!isDelivered && (
-                            <div className="mb-6 rounded-2xl bg-white p-6 shadow-xl dark:bg-gray-800">
-                                <h2 className="mb-4 text-xl font-bold text-gray-800 dark:text-white">
+                            <div className="mb-6 rounded-2xl bg-white p-4 sm:p-6 shadow-xl dark:bg-gray-800">
+                                <h2 className="mb-4 text-lg sm:text-xl font-bold text-gray-800 dark:text-white">
                                     Acciones de Seguimiento
                                 </h2>
 
@@ -369,10 +405,10 @@ export const FollowUp = ({
                                 {(actionType === 'pay' ||
                                     actionType === 'pay-deliver') && (
                                     <div className="mb-6 rounded-xl bg-blue-50 p-4 dark:bg-blue-900">
-                                        <h3 className="mb-4 text-lg font-semibold text-gray-800 dark:text-white">
+                                        <h3 className="mb-4 text-base sm:text-lg font-semibold text-gray-800 dark:text-white">
                                             Datos del Pago
                                         </h3>
-                                        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                                        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                                             <div>
                                                 <label className="mb-2 flex items-center text-sm font-medium text-gray-700 dark:text-gray-300">
                                                     <Calendar className="mr-2 h-4 w-4" />
@@ -394,8 +430,13 @@ export const FollowUp = ({
                                                                 e.target.value,
                                                             );
                                                         } else {
+                                                            // Para "Pagar y Entregar", sincronizar ambas fechas
                                                             setPayDeliverData(
                                                                 'payment_date',
+                                                                e.target.value,
+                                                            );
+                                                            setPayDeliverData(
+                                                                'delivery_date',
                                                                 e.target.value,
                                                             );
                                                         }
@@ -529,10 +570,10 @@ export const FollowUp = ({
                                 {(actionType === 'deliver' ||
                                     actionType === 'pay-deliver') && (
                                     <div className="mb-6 rounded-xl bg-green-50 p-4 dark:bg-green-900">
-                                        <h3 className="mb-4 text-lg font-semibold text-gray-800 dark:text-white">
+                                        <h3 className="mb-4 text-base sm:text-lg font-semibold text-gray-800 dark:text-white">
                                             Datos de la Entrega
                                         </h3>
-                                        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                                        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                                             <div>
                                                 <label className="mb-2 flex items-center text-sm font-medium text-gray-700 dark:text-gray-300">
                                                     <Calendar className="mr-2 h-4 w-4" />
@@ -546,6 +587,7 @@ export const FollowUp = ({
                                                             : payDeliverData.delivery_date
                                                     }
                                                     onChange={(e) => {
+                                                        // Solo permitir cambio si es "Solo Entregar"
                                                         if (
                                                             actionType ===
                                                             'deliver'
@@ -554,15 +596,29 @@ export const FollowUp = ({
                                                                 'delivery_date',
                                                                 e.target.value,
                                                             );
-                                                        } else {
-                                                            setPayDeliverData(
-                                                                'delivery_date',
-                                                                e.target.value,
-                                                            );
                                                         }
+                                                        // Para "Pagar y Entregar", no permitir cambio directo
                                                     }}
-                                                    className="w-full rounded-xl border-2 border-gray-200 bg-gray-50 px-4 py-3 focus:border-purple-500 focus:outline-none dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+                                                    readOnly={
+                                                        actionType ===
+                                                        'pay-deliver'
+                                                    }
+                                                    className={`w-full rounded-xl border-2 px-4 py-3 focus:outline-none ${
+                                                        actionType ===
+                                                        'pay-deliver'
+                                                            ? 'cursor-not-allowed border-gray-300 bg-gray-100 text-gray-500 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-400'
+                                                            : 'border-gray-200 bg-gray-50 focus:border-purple-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white'
+                                                    }`}
                                                 />
+                                                {actionType ===
+                                                    'pay-deliver' && (
+                                                    <p className="mt-1 text-xs text-blue-600 dark:text-blue-400">
+                                                        📅 La fecha de entrega
+                                                        se sincroniza
+                                                        automáticamente con la
+                                                        fecha de pago
+                                                    </p>
+                                                )}
                                             </div>
                                             <div>
                                                 <label className="mb-2 flex items-center text-sm font-medium text-gray-700 dark:text-gray-300">
@@ -629,7 +685,7 @@ export const FollowUp = ({
 
                                 {/* Botones de Acción - Solo mostrar si no hay acción seleccionada */}
                                 {!actionType && (
-                                    <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+                                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
                                         <Button
                                             onClick={() =>
                                                 handleAction('pay-deliver')
@@ -669,7 +725,7 @@ export const FollowUp = ({
 
                                 {/* Botones de Confirmación - Solo mostrar si hay acción seleccionada */}
                                 {actionType && (
-                                    <div className="flex justify-center gap-4">
+                                    <div className="flex flex-col sm:flex-row justify-center gap-4">
                                         <Button
                                             onClick={() => {
                                                 switch (actionType) {
@@ -709,38 +765,101 @@ export const FollowUp = ({
 
                         {/* Historial de Pagos */}
                         {order.payments && order.payments.length > 0 && (
-                            <div className="rounded-2xl bg-white p-6 shadow-xl dark:bg-gray-800">
-                                <h2 className="mb-4 text-xl font-bold text-gray-800 dark:text-white">
+                            <div className="mb-4 rounded-2xl bg-white p-4 sm:p-6 shadow-xl dark:bg-gray-800">
+                                <h2 className="mb-4 text-lg sm:text-xl font-bold text-gray-800 dark:text-white">
                                     Historial de Pagos
                                 </h2>
                                 <div className="space-y-3">
                                     {order.payments.map((payment, idx) => (
                                         <div
                                             key={idx}
-                                            className="flex items-center justify-between rounded-xl bg-gray-50 p-4 dark:bg-gray-700"
+                                            className="rounded-xl bg-gray-50 p-4 dark:bg-gray-700"
                                         >
-                                            <div className="flex items-center space-x-3">
-                                                <span className="text-gray-600 dark:text-gray-300">
-                                                    {new Date(
-                                                        payment.payment_date,
-                                                    ).toLocaleDateString(
-                                                        'es-ES',
-                                                    )}
-                                                </span>
-                                                <Badge
-                                                    variant="secondary"
-                                                    className="text-xs"
-                                                >
-                                                    {payment.method_label ||
-                                                        payment.method}
-                                                </Badge>
+                                            <div className="mb-2 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                                                <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:space-x-3">
+                                                    <span className="font-medium text-gray-600 dark:text-gray-300">
+                                                        {formatDate(
+                                                            payment.payment_date ||
+                                                                '',
+                                                        )}
+                                                    </span>
+                                                    <Badge
+                                                        variant="secondary"
+                                                        className="text-xs w-fit"
+                                                    >
+                                                        {payment.method_label ||
+                                                            payment.method}
+                                                    </Badge>
+                                                </div>
+                                                <div className="flex flex-col sm:text-right">
+                                                    <span className="text-lg font-bold text-green-600 dark:text-green-400">
+                                                        +$
+                                                        {toNumber(
+                                                            payment.amount,
+                                                        ).toFixed(2)}
+                                                    </span>
+                                                    <div className="text-sm text-gray-500 dark:text-gray-400">
+                                                        {payment.receiver
+                                                            ?.name || 'Usuario'}
+                                                    </div>
+                                                </div>
                                             </div>
-                                            <span className="text-lg font-bold text-green-600 dark:text-green-400">
-                                                +$
-                                                {toNumber(
-                                                    payment.amount,
-                                                ).toFixed(2)}
-                                            </span>
+                                            {payment.notes && (
+                                                <div className="mt-2 border-t border-gray-200 pt-2 dark:border-gray-600">
+                                                    <p className="text-sm text-gray-600 italic dark:text-gray-300">
+                                                        💬 {payment.notes}
+                                                    </p>
+                                                </div>
+                                            )}
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Historial de Entregas */}
+                        {order.deliveries && order.deliveries.length > 0 && (
+                            <div className="mb-4 rounded-2xl bg-white p-4 sm:p-6 shadow-xl dark:bg-gray-800">
+                                <h2 className="mb-4 text-lg sm:text-xl font-bold text-gray-800 dark:text-white">
+                                    Historial de Entregas
+                                </h2>
+                                <div className="space-y-3">
+                                    {order.deliveries.map((delivery, idx) => (
+                                        <div
+                                            key={idx}
+                                            className="rounded-xl bg-gray-50 p-4 dark:bg-gray-700"
+                                        >
+                                            <div className="mb-2 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                                                <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:space-x-3">
+                                                    <span className="font-medium text-gray-600 dark:text-gray-300">
+                                                        {formatDate(
+                                                            delivery.delivery_date ||
+                                                                '',
+                                                        )}
+                                                    </span>
+                                                    <Badge
+                                                        variant="secondary"
+                                                        className="text-xs w-fit"
+                                                    >
+                                                        {delivery.status_label ||
+                                                            delivery.status}
+                                                    </Badge>
+                                                </div>
+                                                <div className="flex flex-col sm:text-right">
+                                                    <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">
+                                                        {delivery.deliverer
+                                                            ?.name || 'Usuario'}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                            {delivery.comments && (
+                                                <div className="mt-2 flex items-start space-x-2">
+                                                    <MessageSquare className="mt-0.5 h-4 w-4 flex-shrink-0 text-purple-500" />
+                                                    <p className="text-sm text-gray-600 italic dark:text-gray-400">
+                                                        {delivery.comments}
+                                                    </p>
+                                                </div>
+                                            )}
                                         </div>
                                     ))}
                                 </div>

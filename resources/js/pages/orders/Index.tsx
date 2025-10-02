@@ -139,9 +139,11 @@ export default function OrdersIndex({ orders, branches, filters, statusOptions }
         console.log('Date string received:', dateString, 'Type:', typeof dateString);
 
         try {
-            // Si la fecha viene en formato YYYY-MM-DD, agregar tiempo local
+            // Si la fecha viene en formato YYYY-MM-DD, parsear manualmente
             if (dateString.match(/^\d{4}-\d{2}-\d{2}$/)) {
-                const date = new Date(dateString + 'T00:00:00');
+                const [year, month, day] = dateString.split('-').map(Number);
+                // Crear fecha en zona horaria local (month es 0-indexed en JavaScript)
+                const date = new Date(year, month - 1, day);
                 return date.toLocaleDateString('es-MX');
             }
 
@@ -164,20 +166,24 @@ export default function OrdersIndex({ orders, branches, filters, statusOptions }
             <Head title="Órdenes" />
 
             <div className="space-y-6">
-                {/* Header */}
-                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                    <div>
-                        <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Órdenes</h1>
-                        <p className="text-gray-600 dark:text-gray-400 mt-1">
+                {/* Encabezado - Responsive */}
+                <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between p-6 sm:p-0">
+                    <div className="w-full sm:w-auto">
+                        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">
+                            Órdenes
+                        </h1>
+                        <p className="text-gray-600 dark:text-gray-400 mt-1 text-sm sm:text-base">
                             Gestiona todas las órdenes del sistema
                         </p>
                     </div>
-                    <Link href="/dashboard">
-                        <Button className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white">
-                            <Plus className="w-4 h-4 mr-2" />
-                            Nueva Orden
-                        </Button>
-                    </Link>
+                    <div className="w-full sm:w-auto flex justify-start sm:justify-end">
+                        <Link href="/dashboard" className="w-full sm:w-auto">
+                            <Button className="w-full sm:w-auto bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white flex items-center justify-center">
+                                <Plus className="w-4 h-4 mr-2" />
+                                Nueva Orden
+                            </Button>
+                        </Link>
+                    </div>
                 </div>
 
                 {/* Filtros y Búsqueda */}
@@ -208,7 +214,7 @@ export default function OrdersIndex({ orders, branches, filters, statusOptions }
                         </Button>
 
                         {/* Botón de búsqueda */}
-                        <Button onClick={handleSearch}>
+                        <Button variant="purpleGradient" onClick={handleSearch}>
                             <Search className="w-4 h-4 mr-2" />
                             Buscar
                         </Button>
@@ -300,7 +306,7 @@ export default function OrdersIndex({ orders, branches, filters, statusOptions }
                                         Fecha Elaboración
                                     </th>
                                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                                        Fecha Entrega
+                                        Fecha Entregado
                                     </th>
                                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                                         Creado por
