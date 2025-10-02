@@ -84,9 +84,6 @@ export default function UsersIndex({ users }: Props) {
                     <div className="mb-8">
                         <div className="flex items-center justify-between">
                             <div className="flex items-center space-x-3">
-                                <div className="p-3 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-xl shadow-lg">
-                                    <Users className="h-8 w-8 text-white" />
-                                </div>
                                 <div>
                                     <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
                                         Gestión de Usuarios

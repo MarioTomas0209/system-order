@@ -8,6 +8,7 @@ use App\Models\Branch;
 use App\Models\User;
 use App\Models\Payment;
 use App\Models\Delivery;
+use Carbon\Carbon;
 
 class OrderSeeder extends Seeder
 {
@@ -16,85 +17,105 @@ class OrderSeeder extends Seeder
      */
     public function run(): void
     {
-        // Obtener la primera sucursal y usuario
-        $branch = Branch::first();
-        $user = User::first();
+        $branches = Branch::all();
+        $users = User::all();
 
-        if (!$branch || !$user) {
-            $this->command->warn('No hay sucursales o usuarios disponibles. Ejecuta primero BranchSeeder y crea un usuario.');
+        if ($branches->isEmpty() || $users->isEmpty()) {
+            $this->command->warn('No hay sucursales o usuarios disponibles. Ejecuta primero BranchSeeder y UserSeeder.');
             return;
         }
 
-        // Crear órdenes de ejemplo
-        $orders = [
-            [
-                'order_code' => 'ORD-001',
-                'created_date' => now()->subDays(5)->format('Y-m-d'),
-                'concept' => 'Lonas para toldo de 3x4 metros con diseño personalizado',
-                'total' => 2500.00,
-                'advance' => 500.00,
-                'status' => 'en_elaboracion',
-                'notes' => 'Cliente solicita entrega urgente',
-                'delivery_address' => 'Calle 60 #123, Centro, Mérida, Yucatán',
-                'contact_phone' => '9991234567',
-            ],
-            [
-                'order_code' => 'ORD-002',
-                'created_date' => now()->subDays(3)->format('Y-m-d'),
-                'concept' => 'Set completo de cortinas para oficina (6 piezas)',
-                'total' => 1800.00,
-                'advance' => 1800.00,
-                'status' => 'entregada',
-                'notes' => 'Pago completo al momento de la orden',
-                'delivery_address' => 'Av. Paseo de Montejo #456, Mérida, Yucatán',
-                'contact_phone' => '9997654321',
-            ],
-            [
-                'order_code' => 'ORD-003',
-                'created_date' => now()->subDays(1)->format('Y-m-d'),
-                'concept' => 'Mantel para restaurante 2x3 metros',
-                'total' => 1200.00,
-                'advance' => 0.00,
-                'status' => 'en_elaboracion',
-                'notes' => 'Cliente pagará al momento de la entrega',
-                'delivery_address' => 'Calle 25 #789, Centro, Mérida, Yucatán',
-                'contact_phone' => '9999876543',
-            ],
+        $statuses = ['en_elaboracion', 'entregada', 'cancelada'];
+        $paymentMethods = ['efectivo', 'tarjeta', 'transferencia'];
+        $deliveryMethods = ['recoleccion', 'envio', 'entrega_directa'];
+        
+        $concepts = [
+            'Lonas para toldo de 3x4 metros',
+            'Set completo de cortinas para oficina',
+            'Mantel para restaurante',
+            'Banner publicitario 2x1 metros',
+            'Lona para evento corporativo',
+            'Cortinas blackout para sala',
+            'Toldos para terraza',
+            'Carpas para evento',
+            'Banners roll-up',
+            'Impresión de vinil adhesivo',
         ];
 
-        foreach ($orders as $orderData) {
+        // Generar órdenes de los últimos 6 meses
+        for ($i = 0; $i < 50; $i++) {
+            $createdDate = Carbon::now()->subDays(rand(0, 180));
+            $status = $statuses[array_rand($statuses)];
+            $total = rand(500, 5000);
+            $advance = $status === 'cancelada' ? 0 : rand(0, $total);
+            $balance = $total - $advance;
+
             $order = Order::create([
-                ...$orderData,
-                'balance' => $orderData['total'] - $orderData['advance'],
-                'branch_id' => $branch->id,
-                'created_by' => $user->id,
+                'order_code' => 'ORD-' . str_pad($i + 1, 5, '0', STR_PAD_LEFT),
+                'created_date' => $createdDate->format('Y-m-d'),
+                'delivery_date' => $status === 'entregada' ? $createdDate->addDays(rand(5, 15))->format('Y-m-d') : null,
+                'concept' => $concepts[array_rand($concepts)],
+                'total' => $total,
+                'advance' => $advance,
+                'balance' => $balance,
+                'status' => $status,
+                'notes' => $status === 'cancelada' ? 'Orden cancelada por el cliente' : 'Orden en proceso',
+                'delivery_address' => 'Dirección #' . rand(100, 999),
+                'contact_phone' => '999' . rand(1000000, 9999999),
+                'branch_id' => $branches->random()->id,
+                'created_by' => $users->random()->id,
             ]);
 
-            // Si hay anticipo, crear el pago correspondiente
-            if ($orderData['advance'] > 0) {
+            // Crear pagos si hay anticipo
+            if ($advance > 0) {
+                // Pago inicial (anticipo)
                 Payment::create([
                     'order_id' => $order->id,
-                    'payment_date' => $orderData['created_date'],
-                    'amount' => $orderData['advance'],
-                    'method' => 'efectivo',
-                    'received_by' => $user->id,
+                    'payment_date' => $createdDate->format('Y-m-d'),
+                    'amount' => $advance,
+                    'method' => $paymentMethods[array_rand($paymentMethods)],
+                    'received_by' => $users->random()->id,
                     'notes' => 'Anticipo inicial',
                 ]);
+
+                // Si está entregada y hay balance, agregar pago final
+                if ($status === 'entregada' && $balance > 0 && rand(0, 1) === 1) {
+                    Payment::create([
+                        'order_id' => $order->id,
+                        'payment_date' => $createdDate->addDays(rand(3, 10))->format('Y-m-d'),
+                        'amount' => $balance,
+                        'method' => $paymentMethods[array_rand($paymentMethods)],
+                        'received_by' => $users->random()->id,
+                        'notes' => 'Pago final',
+                    ]);
+                }
             }
 
-            // Si la orden está entregada, crear una entrega
-            if ($orderData['status'] === 'entregada') {
+            // Crear entregas si la orden está entregada
+            if ($status === 'entregada') {
                 Delivery::create([
                     'order_id' => $order->id,
-                    'delivery_date' => now()->subDays(1)->format('Y-m-d'),
-                    'status' => 'entregado',
+                    'delivery_date' => $order->delivery_date ?? $createdDate->addDays(rand(5, 15))->format('Y-m-d'),
+                    'status' => rand(0, 10) > 1 ? 'entregado' : 'parcial',
                     'comments' => 'Entrega completada exitosamente',
-                    'delivered_by' => $user->id,
-                    'delivery_method' => 'entrega_directa',
+                    'delivered_by' => $users->random()->id,
+                    'delivery_method' => $deliveryMethods[array_rand($deliveryMethods)],
+                    'tracking_number' => 'TRK-' . rand(10000, 99999),
+                ]);
+            } elseif ($status === 'en_elaboracion' && rand(0, 3) === 0) {
+                // Algunas órdenes en elaboración pueden tener entrega pendiente
+                Delivery::create([
+                    'order_id' => $order->id,
+                    'delivery_date' => $createdDate->addDays(rand(5, 15))->format('Y-m-d'),
+                    'status' => 'pendiente',
+                    'comments' => 'Entrega programada',
+                    'delivered_by' => $users->random()->id,
+                    'delivery_method' => $deliveryMethods[array_rand($deliveryMethods)],
+                    'tracking_number' => 'TRK-' . rand(10000, 99999),
                 ]);
             }
         }
 
-        $this->command->info('Órdenes de ejemplo creadas exitosamente.');
+        $this->command->info('Se crearon 50 órdenes con sus respectivos pagos y entregas.');
     }
 }

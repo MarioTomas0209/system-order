@@ -32,17 +32,15 @@ import { UserMenuContent } from '@/components/user-menu-content';
 import { useInitials } from '@/hooks/use-initials';
 import { cn } from '@/lib/utils';
 import { dashboard } from '@/routes';
-import branchRoutes from '@/routes/branches';
-import userRoutes from '@/routes/users';
 import { Link, usePage } from '@inertiajs/react';
-import { Building2, LayoutGrid, Menu, Package, Users } from 'lucide-react';
+import { Building2, LayoutGrid, Menu, Package, Users, ChartNoAxesCombined } from 'lucide-react';
 import AppLogo from './app-logo';
 import AppLogoIcon from './app-logo-icon';
 
 const mainNavItems: NavItem[] = [
     {
         title: 'Inicio',
-        href: dashboard(),
+        href: '/dashboard',
         icon: LayoutGrid,
         superadmin: false,
     },
@@ -54,14 +52,20 @@ const mainNavItems: NavItem[] = [
     },
     {
         title: 'Sucursales',
-        href: branchRoutes.index(),
+        href: '/branches',
         icon: Building2,
         superadmin: true,
     },
     {
         title: 'Usuarios',
-        href: userRoutes.index(),
+        href: '/users',
         icon: Users,
+        superadmin: true,
+    },
+    {
+        title: 'Reportes',
+        href: '/reports',
+        icon: ChartNoAxesCombined,
         superadmin: true,
     },
 ];
