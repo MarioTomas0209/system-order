@@ -1,5 +1,6 @@
 import AppLayout from '@/layouts/app-layout';
 import { Head, Link, useForm } from '@inertiajs/react';
+import { useState } from 'react';
 import { 
     ArrowLeft, 
     Calendar, 
@@ -40,6 +41,8 @@ const breadcrumbs: BreadcrumbItem[] = [
 ];
 
 export default function EditOrder({ order, branches }: EditOrderProps) {
+    const [clientErrors, setClientErrors] = useState<Record<string, string>>({});
+    
     const { data, setData, put, processing, errors } = useForm({
         order_code: order.order_code,
         elaboration_date: order.created_date,
@@ -56,11 +59,28 @@ export default function EditOrder({ order, branches }: EditOrderProps) {
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
+        
+        // Limpiar errores del cliente
+        setClientErrors({});
+        
+        // Validación del lado del cliente
+        if (!data.branch_id || data.branch_id === 0) {
+            setClientErrors({ branch_id: 'La sucursal es requerida' });
+            return;
+        }
+        
         put(`/orders/${order.id}`);
     };
 
     const handleInputChange = (field: string, value: any) => {
         setData(field as keyof typeof data, value);
+        
+        // Limpiar errores del cliente cuando el usuario modifica el campo
+        if (clientErrors[field]) {
+            const newErrors = { ...clientErrors };
+            delete newErrors[field];
+            setClientErrors(newErrors);
+        }
     };
 
     const balance = data.total - data.advance;
@@ -196,8 +216,10 @@ export default function EditOrder({ order, branches }: EditOrderProps) {
                                             </option>
                                         ))}
                                     </select>
-                                    {errors.branch_id && (
-                                        <p className="text-red-500 text-sm mt-1">{errors.branch_id}</p>
+                                    {(errors.branch_id || clientErrors.branch_id) && (
+                                        <p className="text-red-500 text-sm mt-1">
+                                            {errors.branch_id || clientErrors.branch_id}
+                                        </p>
                                     )}
                                 </div>
 
@@ -312,7 +334,7 @@ export default function EditOrder({ order, branches }: EditOrderProps) {
                         </h2>
                         
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <div>
+                            <div className='hidden'>
                                 <Label htmlFor="delivery_address">Dirección de Entrega</Label>
                                 <div className="relative">
                                     <MapPin className="absolute left-3 top-3 text-gray-400 w-4 h-4" />
@@ -330,7 +352,7 @@ export default function EditOrder({ order, branches }: EditOrderProps) {
                                 )}
                             </div>
 
-                            <div className="space-y-4">
+                            {/* <div className="space-y-4"> */}
                                 <div>
                                     <Label htmlFor="contact_phone">Teléfono de Contacto</Label>
                                     <div className="relative">
@@ -362,7 +384,7 @@ export default function EditOrder({ order, branches }: EditOrderProps) {
                                         <p className="text-red-500 text-sm mt-1">{errors.notes}</p>
                                     )}
                                 </div>
-                            </div>
+                            {/* </div> */}
                         </div>
                     </Card>
 

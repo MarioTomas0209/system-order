@@ -3,6 +3,7 @@ import AppLayout from '@/layouts/app-layout';
 import type { Branch, BreadcrumbItem, NewOrderForm } from '@/types';
 import { Head, useForm } from '@inertiajs/react';
 import {
+    AlertTriangle,
     ArrowLeft,
     Building2,
     Calendar,
@@ -28,6 +29,9 @@ const Breadcrumbs: BreadcrumbItem[] = [
 
 export const NewOrder = ({ orderCode = '', branches = [] }: NewOrderProps) => {
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [clientErrors, setClientErrors] = useState<Record<string, string>>(
+        {},
+    );
 
     const { data, setData, post, errors, reset } = useForm<NewOrderForm>({
         order_code: orderCode,
@@ -50,12 +54,23 @@ export const NewOrder = ({ orderCode = '', branches = [] }: NewOrderProps) => {
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
+
+        // Limpiar errores del cliente
+        setClientErrors({});
+
+        // Validación del lado del cliente
+        if (!data.branch_id || data.branch_id === 0) {
+            setClientErrors({ branch_id: 'La sucursal es requerida' });
+            return;
+        }
+
         setIsSubmitting(true);
 
         post('/orders', {
             onFinish: () => setIsSubmitting(false),
             onSuccess: () => {
                 reset();
+                setClientErrors({});
                 // El controlador redirigirá automáticamente
             },
         });
@@ -66,6 +81,13 @@ export const NewOrder = ({ orderCode = '', branches = [] }: NewOrderProps) => {
         value: string | number,
     ) => {
         setData(field, value);
+
+        // Limpiar errores del cliente cuando el usuario modifica el campo
+        if (clientErrors[field]) {
+            const newErrors = { ...clientErrors };
+            delete newErrors[field];
+            setClientErrors(newErrors);
+        }
     };
 
     const calculatedBalance = data.total - data.advance;
@@ -122,9 +144,32 @@ export const NewOrder = ({ orderCode = '', branches = [] }: NewOrderProps) => {
                                             </p>
                                         )}
                                     </div>
-
-                                    {/* Sucursal */}
+                                    {/* Fecha */}
                                     <div>
+                                        <label className="mb-2 flex items-center text-sm font-medium text-gray-700 dark:text-gray-300">
+                                            <Calendar className="mr-2 h-4 w-4" />
+                                            Fecha de Elaboración *
+                                        </label>
+                                        <input
+                                            type="date"
+                                            required
+                                            value={data.elaboration_date}
+                                            onChange={(e) =>
+                                                handleInputChange(
+                                                    'elaboration_date',
+                                                    e.target.value,
+                                                )
+                                            }
+                                            className="w-full rounded-xl border-2 border-gray-200 bg-gray-50 px-4 py-3 focus:border-emerald-500 focus:outline-none dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+                                        />
+                                        {errors.elaboration_date && (
+                                            <p className="mt-1 text-sm text-red-500">
+                                                {errors.elaboration_date}
+                                            </p>
+                                        )}
+                                    </div>
+                                    {/* Sucursal */}
+                                    <div className="col-span-2">
                                         <label className="mb-2 flex items-center text-sm font-medium text-gray-700 dark:text-gray-300">
                                             <Building2 className="mr-2 h-4 w-4" />
                                             Sucursal *
@@ -152,40 +197,18 @@ export const NewOrder = ({ orderCode = '', branches = [] }: NewOrderProps) => {
                                                 </option>
                                             ))}
                                         </select>
-                                        {errors.branch_id && (
-                                            <p className="mt-1 text-sm text-red-500">
-                                                {errors.branch_id}
+                                        {(errors.branch_id ||
+                                            clientErrors.branch_id) && (
+                                            <p className="mt-1 flex items-center gap-2 font-bold rounded-md bg-red-500 p-2 text-sm text-white">
+                                                <AlertTriangle className="h-4 w-4" />
+                                                {errors.branch_id ||
+                                                    clientErrors.branch_id}
                                             </p>
                                         )}
                                     </div>
-
-                                    {/* Fecha */}
-                                    <div>
-                                        <label className="mb-2 flex items-center text-sm font-medium text-gray-700 dark:text-gray-300">
-                                            <Calendar className="mr-2 h-4 w-4" />
-                                            Fecha de Elaboración *
-                                        </label>
-                                        <input
-                                            type="date"
-                                            required
-                                            value={data.elaboration_date}
-                                            onChange={(e) =>
-                                                handleInputChange(
-                                                    'elaboration_date',
-                                                    e.target.value,
-                                                )
-                                            }
-                                            className="w-full rounded-xl border-2 border-gray-200 bg-gray-50 px-4 py-3 focus:border-emerald-500 focus:outline-none dark:border-gray-600 dark:bg-gray-700 dark:text-white"
-                                        />
-                                        {errors.elaboration_date && (
-                                            <p className="mt-1 text-sm text-red-500">
-                                                {errors.elaboration_date}
-                                            </p>
-                                        )}
-                                    </div>
-
                                     {/* Fecha de Entrega */}
-                                    <div>
+                                    {/* //! De mientras desabilitamos este campo */}
+                                    <div className="hidden">
                                         <label className="mb-2 flex items-center text-sm font-medium text-gray-700 dark:text-gray-300">
                                             <Calendar className="mr-2 h-4 w-4" />
                                             Fecha de Entrega
@@ -207,7 +230,6 @@ export const NewOrder = ({ orderCode = '', branches = [] }: NewOrderProps) => {
                                             </p>
                                         )}
                                     </div>
-
                                     {/* Concepto */}
                                     <div className="md:col-span-2">
                                         <label className="mb-2 flex items-center text-sm font-medium text-gray-700 dark:text-gray-300">
@@ -233,7 +255,6 @@ export const NewOrder = ({ orderCode = '', branches = [] }: NewOrderProps) => {
                                             </p>
                                         )}
                                     </div>
-
                                     {/* Total */}
                                     <div>
                                         <label className="mb-2 flex items-center text-sm font-medium text-gray-700 dark:text-gray-300">
@@ -263,7 +284,6 @@ export const NewOrder = ({ orderCode = '', branches = [] }: NewOrderProps) => {
                                             </p>
                                         )}
                                     </div>
-
                                     {/* Anticipo */}
                                     <div>
                                         <label className="mb-2 flex items-center text-sm font-medium text-gray-700 dark:text-gray-300">
@@ -294,10 +314,9 @@ export const NewOrder = ({ orderCode = '', branches = [] }: NewOrderProps) => {
                                             </p>
                                         )}
                                     </div>
-
                                     {/* Dirección de Entrega */}
-                                    <div className="md:col-span-2">
-                                        <label className="mb-2 flex items-center text-sm font-medium text-gray-700 dark:text-gray-300">
+                                    <div className="hidden md:col-span-2">
+                                        <label className="hiden mb-2 flex items-center text-sm font-medium text-gray-700 dark:text-gray-300">
                                             <MapPin className="mr-2 h-4 w-4" />
                                             Dirección de Entrega
                                         </label>
@@ -319,7 +338,6 @@ export const NewOrder = ({ orderCode = '', branches = [] }: NewOrderProps) => {
                                             </p>
                                         )}
                                     </div>
-
                                     {/* Teléfono de Contacto */}
                                     <div>
                                         <label className="mb-2 flex items-center text-sm font-medium text-gray-700 dark:text-gray-300">
@@ -344,7 +362,6 @@ export const NewOrder = ({ orderCode = '', branches = [] }: NewOrderProps) => {
                                             </p>
                                         )}
                                     </div>
-
                                     {/* Observaciones */}
                                     <div>
                                         <label className="mb-2 flex items-center text-sm font-medium text-gray-700 dark:text-gray-300">
@@ -408,7 +425,7 @@ export const NewOrder = ({ orderCode = '', branches = [] }: NewOrderProps) => {
                                 <div className="mt-8 flex gap-4">
                                     <Button
                                         type="button"
-                                        variant="outline"
+                                        variant="destructive"
                                         onClick={() => window.history.back()}
                                         className="flex items-center space-x-2"
                                     >
